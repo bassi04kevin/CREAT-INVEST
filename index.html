@@ -33,6 +33,7 @@
   .agence-icon{width:36px;height:36px;border-radius:10px;background:var(--mint-50);display:flex;align-items:center;justify-content:center;color:var(--teal-700);font-family:'Sora',sans-serif;font-weight:600;font-size:13px;flex-shrink:0;}
   .agence-item.selected .agence-icon{background:var(--gold-500);color:#fff;}
   .agence-name{font-weight:500;font-size:14.5px;}
+  .conseiller-label{font-weight:500;font-size:14.5px;color:var(--ink-900);margin-bottom:10px;line-height:1.4;}
   select.field{width:100%;border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:14.5px;font-family:'Inter',sans-serif;color:var(--ink-900);outline:none;background:var(--paper);-webkit-appearance:none;appearance:none;}
   select.field:focus{border-color:var(--teal-500);}
   .hint{font-size:12px;color:var(--ink-500);margin-top:8px;line-height:1.5;}
@@ -65,6 +66,7 @@
   .check-circle svg{width:28px;height:28px;}
   .thanks-title{font-family:'Sora',sans-serif;font-size:19px;font-weight:600;margin:0 0 8px;}
   .thanks-sub{font-size:13.5px;color:var(--ink-500);line-height:1.55;max-width:280px;}
+  .thanks-slogan{font-family:'Sora',sans-serif;font-size:12.5px;font-weight:600;color:var(--gold-500);letter-spacing:0.03em;margin-top:22px;max-width:260px;}
   .error-text{color:var(--danger);font-size:12px;margin-top:6px;display:none;}
 </style>
 </head>
@@ -73,8 +75,6 @@
 <div class="app"><div id="content"></div></div>
 
 <script>
-// ---- Cible : le backend Apps Script (API only), pas un chargement de page ----
-// ⚠️ REMPLACER par l'URL /exec obtenue après déploiement de Code_API.gs
 const WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbx0bmt6ejzH-gLPw9m87r8UVRC9sLkPUKqmzAhz027LG32K0NdNMMqsroPdmS_wV1jSJg/exec';
 
 const AGENCES = [
@@ -101,14 +101,10 @@ const criteresII = [
   {id:'c4', name:'Propreté physique', desc:'Tenue harmonisée et propre, badge visible'},
   {id:'c5', name:'Convivialité de l\'espace', desc:'Propreté des lieux, affichage à jour, espace accueillant'}
 ];
-const criteresIII = [
-  {id:'c6', name:'Maîtrise des produits', desc:'Connaissance de l\'offre, capacité à argumenter sans support'},
-  {id:'c7', name:'Maîtrise du tarifaire', desc:'Explication des taux et conditions sans hésitation'}
-];
 
-const state = { agence: null, conseiller: '', notes: {c1:7,c2:7,c3:7,c4:7,c5:7,c6:7,c7:7}, commentaire: '' };
+const state = { agence: null, conseiller: '', notes: {c1:7,c2:7,c3:7,c4:7,c5:7}, commentaire: '' };
 let step = 0, submitting = false;
-const totalSteps = 8;
+const totalSteps = 7;
 
 function progressHTML(current){
   let dots = '';
@@ -144,7 +140,7 @@ function render(){
   let html = '';
 
   if(step === 0){
-    html = `<div class="qr-wrap"><p class="qr-title">Votre avis compte</p>
+    html = `<div class="qr-wrap"><p class="qr-title">Votre avis compte à mieux vous servir</p>
       <p class="qr-sub">Merci de prendre 2 minutes pour évaluer votre expérience en agence aujourd'hui.</p></div>
       <div class="footer"><button class="btn btn-primary" onclick="next()">Commencer</button></div>`;
   }
@@ -152,7 +148,7 @@ function render(){
     html = `<div class="header"><div class="brand">CREA INVEST · Votre avis</div>
       <div class="title">Quelle agence avez-vous visitée aujourd'hui ?</div></div>
       ${progressHTML(1)}
-      <div class="body"><div class="step-label">Question 1 sur 7</div>
+      <div class="body"><div class="step-label">Question 1 sur 5</div>
       <div class="agence-list">${AGENCES.map(a => `
         <div class="agence-item ${state.agence===a.code?'selected':''}" onclick="selectAgence('${a.code}')">
           <div class="agence-icon">${a.code.split('-')[0].slice(0,2)}</div><div class="agence-name">${a.nom}</div>
@@ -164,17 +160,16 @@ function render(){
   else if(step === 2){
     html = `<div class="header"><div class="brand">CREA INVEST · Votre avis</div><div class="title">Qui vous a reçu(e) ?</div></div>
       ${progressHTML(2)}
-      <div class="body"><div class="step-label">Question 2 sur 7</div>
-      <select class="field" onchange="state.conseiller=this.value">${conseillerOptions()}</select>
-      <div class="hint">Sélectionnez le nom si vous le connaissez.</div></div>
+      <div class="body"><div class="step-label">Question 2 sur 5</div>
+      <div class="conseiller-label">Sélectionnez le nom de votre interlocuteur si vous le connaissez.</div>
+      <select class="field" onchange="state.conseiller=this.value">${conseillerOptions()}</select></div>
       <div class="footer"><button class="btn btn-ghost" onclick="prev()">Retour</button>
       <button class="btn btn-primary" onclick="next()">Continuer</button></div>`;
   }
-  else if(step === 3 || step === 4 || step === 5){
+  else if(step === 3 || step === 4){
     const groups = {
-      3:{eyebrow:'Section I', label:'Accueil et posture', crits:criteresI, q:'Question 3 sur 7'},
-      4:{eyebrow:'Section II', label:'Image et cadre', crits:criteresII, q:'Question 4 sur 7'},
-      5:{eyebrow:'Section III', label:'Compétences métier', crits:criteresIII, q:'Question 5 sur 7'}
+      3:{eyebrow:'Section I', label:'Accueil et posture', crits:criteresI, q:'Question 3 sur 5'},
+      4:{eyebrow:'Section II', label:'Image et cadre', crits:criteresII, q:'Question 4 sur 5'}
     };
     const g = groups[step];
     html = `<div class="header"><div class="brand">CREA INVEST · Votre avis</div><div class="title">${g.label}</div></div>
@@ -184,19 +179,20 @@ function render(){
       <div class="footer"><button class="btn btn-ghost" onclick="prev()">Retour</button>
       <button class="btn btn-primary" onclick="next()">Continuer</button></div>`;
   }
-  else if(step === 6){
+  else if(step === 5){
     html = `<div class="header"><div class="brand">CREA INVEST · Votre avis</div><div class="title">Un commentaire à ajouter ?</div></div>
-      ${progressHTML(6)}
-      <div class="body"><div class="step-label">Question 6 sur 7 · Facultatif</div>
+      ${progressHTML(5)}
+      <div class="body"><div class="step-label">Question 5 sur 5 · Facultatif</div>
       <textarea class="textarea" placeholder="Dites-nous ce qui vous a marqué, en bien ou en mal…" oninput="state.commentaire=this.value">${state.commentaire}</textarea></div>
       <div class="footer"><button class="btn btn-ghost" onclick="prev()">Retour</button>
       <button class="btn btn-primary" id="btn-submit" onclick="submitReponse()">Envoyer mon avis</button></div>`;
   }
-  else if(step === 7){
+  else if(step === 6){
     html = `<div class="center-screen"><div class="check-circle">
       <svg viewBox="0 0 24 24" fill="none" stroke="#F3E6C8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
       <p class="thanks-title">Merci pour votre avis</p>
-      <p class="thanks-sub">Votre évaluation a été transmise à l'agence ${state.agence ? (AGENCES.find(a=>a.code===state.agence)||{}).nom : ''}.</p></div>`;
+      <p class="thanks-sub">Votre évaluation a été transmise à l'agence ${state.agence ? (AGENCES.find(a=>a.code===state.agence)||{}).nom : ''}.</p>
+      <p class="thanks-slogan">La satisfaction de chaque client, notre priorité</p></div>`;
   }
   content.innerHTML = html;
 }
@@ -226,9 +222,6 @@ function submitReponse(){
     commentaire: state.commentaire
   };
 
-  // mode: 'no-cors' est nécessaire pour parler à un Web App Apps Script depuis un autre domaine.
-  // Conséquence acceptée : on ne peut pas lire la réponse du serveur (réponse "opaque").
-  // Le vrai test de fiabilité, c'est de vérifier la ligne dans le Sheet après coup.
   fetch(WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
     .then(function(){ submitting = false; next(); })
     .catch(function(err){
