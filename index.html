@@ -71,19 +71,12 @@
 <body>
 
 <div class="app"><div id="content"></div></div>
-<iframe name="hidden_iframe" style="display:none;"></iframe>
 
 <script>
-// ---- Cible réelle : l'endpoint natif de soumission du Google Form ----
-const FORM_ACTION_URL = 'https://docs.google.com/forms/d/e/1FAIpQLScWtmaXv31qJ8yriijSkEFvn9gx-CAXTHk2NCr78cK9XBffzg/formResponse';
+// ---- Cible : le backend Apps Script (API only), pas un chargement de page ----
+// ⚠️ REMPLACER par l'URL /exec obtenue après déploiement de Code_API.gs
+const WEBAPP_URL = 'https://script.google.com/macros/s/REMPLACER_PAR_TON_URL_EXEC/exec';
 
-const ENTRY_AGENCE = 'entry.739385411';
-const ENTRY_COMMENTAIRE = 'entry.1209464178';
-const ENTRY_CRITERES = {
-  c1: 'entry.2064187886', c2: 'entry.311086018', c3: 'entry.181376892',
-  c4: 'entry.925189351',  c5: 'entry.1150539627', c6: 'entry.24262631', c7: 'entry.1154504592'
-};
-// Nom EXACT tel que défini comme choix dans le Google Form — ne pas modifier l'orthographe/tirets/accents.
 const AGENCES = [
   { code: 'DLA-AK', nom: "Douala — Akwa" },
   { code: 'DLA-BP', nom: "Douala — Bonapriso" },
@@ -91,13 +84,6 @@ const AGENCES = [
   { code: 'YDE',    nom: "Yaoundé (Obili)" },
   { code: 'BUE',    nom: "Buea (Great Soppo)" }
 ];
-const ENTRY_CONSEILLER_PAR_AGENCE = {
-  'DLA-AK': 'entry.1030634915',
-  'DLA-BP': 'entry.209327904',
-  'DLA-BB': 'entry.666395254',
-  'YDE':    'entry.902653831',
-  'BUE':    'entry.1736510492'
-};
 const CONSEILLERS = {
   'DLA-AK': ["Mpacko", "Dalle Ntone", "Bomba Osonga", "Banga Biyo'o", "Mbonjo Nkongo", "Nyebe Edoa", "Bohongoue", "Mendo Ndzana"],
   'DLA-BP': ["Ngo Njom", "Mefire Ngamchiana"],
@@ -233,36 +219,24 @@ function submitReponse(){
   const btn = document.getElementById('btn-submit');
   if(btn){ btn.disabled = true; btn.textContent = 'Envoi en cours…'; }
 
-  const form = document.createElement('form');
-  form.action = FORM_ACTION_URL;
-  form.method = 'POST';
-  form.target = 'hidden_iframe';
+  const payload = {
+    agenceCode: state.agence,
+    conseiller: state.conseiller,
+    notes: state.notes,
+    commentaire: state.commentaire
+  };
 
-  function addField(name, value){
-    const input = document.createElement('input');
-    input.type = 'hidden'; input.name = name; input.value = value;
-    form.appendChild(input);
-  }
-
-  const nomAgence = (AGENCES.find(a => a.code === state.agence) || {}).nom || '';
-  addField(ENTRY_AGENCE, nomAgence);
-  Object.keys(ENTRY_CRITERES).forEach(id => addField(ENTRY_CRITERES[id], state.notes[id]));
-  if(state.conseiller){
-    const entryConseiller = ENTRY_CONSEILLER_PAR_AGENCE[state.agence];
-    if(entryConseiller) addField(entryConseiller, state.conseiller);
-  }
-  if(state.commentaire) addField(ENTRY_COMMENTAIRE, state.commentaire);
-
-  document.body.appendChild(form);
-  form.submit();
-
-  // Pas de confirmation lisible possible (soumission cross-origin vers un domaine Google) —
-  // on affiche l'écran de remerciement après un court délai, en confiance.
-  setTimeout(function(){
-    submitting = false;
-    document.body.removeChild(form);
-    next();
-  }, 900);
+  // mode: 'no-cors' est nécessaire pour parler à un Web App Apps Script depuis un autre domaine.
+  // Conséquence acceptée : on ne peut pas lire la réponse du serveur (réponse "opaque").
+  // Le vrai test de fiabilité, c'est de vérifier la ligne dans le Sheet après coup.
+  fetch(WEBAPP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
+    .then(function(){ submitting = false; next(); })
+    .catch(function(err){
+      submitting = false;
+      console.error('Échec réseau à l\'envoi :', err);
+      if(btn){ btn.disabled = false; btn.textContent = 'Envoyer mon avis'; }
+      alert('L\'envoi a échoué (problème réseau). Réessaie.');
+    });
 }
 
 render();
