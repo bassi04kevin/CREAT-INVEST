@@ -18,9 +18,10 @@
   html,body{height:100%;}
   body{font-family:'Inter',sans-serif;background:var(--cream-50);margin:0;color:var(--ink-900);display:flex;justify-content:center;}
   .app{width:100%;max-width:480px;min-height:100vh;background:var(--paper);display:flex;flex-direction:column;}
-  .header{background:var(--teal-900);padding:22px 22px 20px;flex-shrink:0;}
-  .header .brand{font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--red-100);letter-spacing:0.04em;margin-bottom:6px;}
-  .header .title{font-family:'Sora',sans-serif;font-size:19px;font-weight:600;color:#fff;line-height:1.3;}
+  .header{background:linear-gradient(160deg, #5C6461 0%, #14161A 100%);padding:30px 22px 28px;flex-shrink:0;display:flex;align-items:center;gap:14px;}
+  .header .brand{font-family:'Sora',sans-serif;font-size:13px;font-weight:600;color:var(--red-100);letter-spacing:0.04em;margin-bottom:7px;}
+  .header .title{font-family:'Sora',sans-serif;font-size:20px;font-weight:600;color:#fff;line-height:1.3;}
+  .header-logo{width:50px;height:50px;object-fit:contain;flex-shrink:0;border-radius:8px;background:#3A3F3E;padding:5px;}
   .progress{display:flex;gap:5px;padding:14px 22px 0;flex-shrink:0;}
   .progress .dot{height:4px;flex:1;background:var(--line);border-radius:2px;overflow:hidden;}
   .progress .dot.filled{background:var(--red-600);}
@@ -36,10 +37,12 @@
   .conseiller-label{font-weight:500;font-size:14.5px;color:var(--ink-900);margin-bottom:10px;line-height:1.4;}
   select.field{width:100%;border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:14.5px;font-family:'Inter',sans-serif;color:var(--ink-900);outline:none;background:var(--paper);-webkit-appearance:none;appearance:none;}
   select.field:focus{border-color:var(--red-600);}
-  .hint{font-size:12px;color:var(--ink-500);margin-top:8px;line-height:1.5;}
+
   .qblock{margin-bottom:26px;}
   .qblock:last-child{margin-bottom:6px;}
-  .qtitle{font-weight:500;font-size:14.5px;color:var(--ink-900);margin-bottom:10px;line-height:1.4;}
+  .qtitle{font-weight:500;font-size:14px;margin-bottom:10px;line-height:1.4;}
+
+  /* Boutons (questions catégorielles) */
   .qoptions{display:flex;flex-direction:column;gap:8px;}
   .qoption{border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:13.5px;color:var(--ink-900);cursor:pointer;transition:border-color .15s, background .15s;}
   .qoption:hover{border-color:var(--red-600);}
@@ -47,6 +50,19 @@
   .qfollowup{margin-top:10px;}
   .qtextarea{width:100%;min-height:70px;border:1px solid var(--line);border-radius:12px;padding:11px 14px;font-size:13.5px;font-family:'Inter',sans-serif;resize:none;outline:none;}
   .qtextarea:focus{border-color:var(--red-600);}
+
+  /* Jauges (questions à échelle qualitative + les 5 anciens critères 0-10) */
+  .crit-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;}
+  .crit-value{font-family:'Sora',sans-serif;font-weight:600;font-size:13px;color:var(--red-700);text-align:right;max-width:55%;}
+  .crit-desc{font-size:12px;color:var(--ink-500);margin-bottom:10px;line-height:1.4;}
+  .gauge{position:relative;height:8px;background:var(--line);border-radius:4px;margin-bottom:6px;}
+  .gauge-fill{position:absolute;left:0;top:0;bottom:0;background:var(--red-600);border-radius:4px;transition:width .12s ease;}
+  .gauge input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;background:transparent;position:relative;z-index:2;margin:0;}
+  .gauge input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--red-700);cursor:pointer;margin-top:-5px;}
+  .gauge input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:3px solid var(--red-700);cursor:pointer;}
+  .gauge input[type=range]::-webkit-slider-runnable-track{height:8px;background:transparent;}
+  .gauge-ends{display:flex;justify-content:space-between;font-size:10.5px;color:var(--ink-300);}
+
   .textarea{width:100%;min-height:110px;border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-size:14px;font-family:'Inter',sans-serif;resize:none;outline:none;}
   .textarea:focus{border-color:var(--red-600);}
   .footer{padding:16px 22px 26px;flex-shrink:0;display:flex;gap:10px;border-top:1px solid var(--line);}
@@ -86,9 +102,6 @@ const AGENCES = [
   { code: 'YDE',    nom: "Yaoundé (Obili)" },
   { code: 'BUE',    nom: "Buea (Great Soppo)" }
 ];
-
-// Noms et prénoms complets, repris du carnet des contacts RH (13.07.2026).
-// Bomba Osonga Bertrand retiré de la liste Akwa sur demande.
 const CONSEILLERS = {
   'DLA-AK': ["Mpacko Agathe Flore", "Dalle Ntone Emile", "Banga Biyo'o Carolle Dominique", "Mbonjo Nkongo Landry", "Nyebe Edoa Achille", "Bohongoue E. Epse Owona Berthe E.", "Mendo Ndzana Chantal Cybelle"],
   'DLA-BP': ["Ngo Njom Mispa Irénée", "Mefire Ngamchiana Mariame Nahwal"],
@@ -97,44 +110,53 @@ const CONSEILLERS = {
   'BUE':    ["Fongang Enyang Veronica", "Sone Bettini M. Kelvis Ngole", "Wahkun Nesline", "Melvis Asoh Suh"]
 };
 
-// ---- Questionnaire : modifiable ici sans toucher au reste du code ----
-// type "choice"  : liste d'options à choix unique (obligatoire)
-// type "text"    : réponse libre (facultatif)
-// followUp       : sous-question qui apparaît sous une question "choice"
-//                  - showIfValue: null  -> toujours affichée (facultative)
-//                  - showIfValue: "Oui" -> affichée seulement si cette option est choisie
+// ---- Grille historique (5 critères, curseur 0-10 chacun) ----
+const criteresI = [
+  {id:'c1', name:"Proactivité à l'accueil", desc:'Prise en charge en moins de 30 secondes, réception debout'},
+  {id:'c2', name:'Attitude', desc:'Sourire, écoute active, éloquence, langage commercial'},
+  {id:'c3', name:'Posture hospitalière', desc:'Chaleur de l\'accueil, attention personnalisée au client'}
+];
+const criteresII = [
+  {id:'c4', name:'Propreté physique', desc:'Tenue harmonisée et propre, badge visible'},
+  {id:'c5', name:'Convivialité de l\'espace', desc:'Propreté des lieux, affichage à jour, espace accueillant'}
+];
+
+// ---- Questionnaire complémentaire (16 questions) ----
+// type "choice" + slider:true  -> jauge à curseur (options classées du pire au mieux)
+// type "choice" (sans slider)  -> boutons à choix unique (catégories sans ordre naturel)
+// type "text"                 -> réponse libre facultative
 const QUESTIONS = [
   { section: 1, id: 'q1_besoin', type: 'choice', title: "Quel est votre besoin immédiat ?",
     options: ["Crédit scolaire", "Avance sur salaire", "Crédit"] },
-  { section: 1, id: 'q2_attente', type: 'choice', title: "Combien de temps avez-vous attendu avant d'être pris(e) en charge ?",
-    options: ["Moins de 2 minutes", "Entre 2 et 5 minutes", "Entre 5 et 10 minutes", "Plus de 10 minutes"] },
-  { section: 1, id: 'q3_accueil', type: 'choice', title: "Comment évaluez-vous l'accueil reçu dans l'agence ?",
-    options: ["Très bon", "Bon", "Moyen", "Mauvais"] },
-  { section: 1, id: 'q4_ecoute', type: 'choice', title: "Le personnel vous a-t-il écouté(e) avec attention ?",
-    options: ["Toujours", "Souvent", "Parfois", "Rarement", "Jamais"] },
+  { section: 1, id: 'q2_attente', type: 'choice', slider: true, title: "Combien de temps avez-vous attendu avant d'être pris(e) en charge ?",
+    options: ["Plus de 10 minutes", "Entre 5 et 10 minutes", "Entre 2 et 5 minutes", "Moins de 2 minutes"] },
+  { section: 1, id: 'q3_accueil', type: 'choice', slider: true, title: "Comment évaluez-vous l'accueil reçu dans l'agence ?",
+    options: ["Mauvais", "Moyen", "Bon", "Très bon"] },
+  { section: 1, id: 'q4_ecoute', type: 'choice', slider: true, title: "Le personnel vous a-t-il écouté(e) avec attention ?",
+    options: ["Jamais", "Rarement", "Parfois", "Souvent", "Toujours"] },
 
   { section: 2, id: 'q5_difficulte', type: 'choice', title: "Avez-vous déjà rencontré une difficulté avec un service particulier de l'agence ?",
     options: ["Oui", "Non"],
     followUp: { id: 'q5_difficulte_precision', title: "Si oui, lequel ?", showIfValue: "Oui" } },
-  { section: 2, id: 'q6_prise_en_charge_probleme', type: 'choice', title: "Lorsque vous rencontrez un problème, avez-vous le sentiment qu'il est rapidement pris en charge ?",
-    options: ["Toujours", "Souvent", "Parfois", "Rarement", "Jamais"] },
-  { section: 2, id: 'q7_qualite_prise_en_charge', type: 'choice', title: "Votre prise en charge a-t-elle été de qualité ?",
-    options: ["Très bon", "Bon", "Moyen", "Mauvais"],
+  { section: 2, id: 'q6_prise_en_charge_probleme', type: 'choice', slider: true, title: "Lorsque vous rencontrez un problème, avez-vous le sentiment qu'il est rapidement pris en charge ?",
+    options: ["Jamais", "Rarement", "Parfois", "Souvent", "Toujours"] },
+  { section: 2, id: 'q7_qualite_prise_en_charge', type: 'choice', slider: true, title: "Votre prise en charge a-t-elle été de qualité ?",
+    options: ["Mauvais", "Moyen", "Bon", "Très bon"],
     followUp: { id: 'q7_qualite_precision', title: "Précisez si vous le souhaitez", showIfValue: null } },
 
-  { section: 3, id: 'q8_clarte', type: 'choice', title: "Les explications données par le conseiller étaient-elles claires ?",
-    options: ["Très claires", "Claires", "Peu claires", "Pas claires du tout"] },
-  { section: 3, id: 'q9_tarifs', type: 'choice', title: "Les tarifs, les taux et les frais vous ont-ils été expliqués clairement ?",
-    options: ["Oui, entièrement", "Oui, en partie", "Non, pas vraiment", "Non, pas du tout"] },
-  { section: 3, id: 'q10_adequation', type: 'choice', title: "Le service ou le produit proposé correspondait-il à votre besoin ?",
-    options: ["Oui, tout à fait", "Plutôt oui", "Plutôt non", "Non"] },
+  { section: 3, id: 'q8_clarte', type: 'choice', slider: true, title: "Les explications données par le conseiller étaient-elles claires ?",
+    options: ["Pas claires du tout", "Peu claires", "Claires", "Très claires"] },
+  { section: 3, id: 'q9_tarifs', type: 'choice', slider: true, title: "Les tarifs, les taux et les frais vous ont-ils été expliqués clairement ?",
+    options: ["Non, pas du tout", "Non, pas vraiment", "Oui, en partie", "Oui, entièrement"] },
+  { section: 3, id: 'q10_adequation', type: 'choice', slider: true, title: "Le service ou le produit proposé correspondait-il à votre besoin ?",
+    options: ["Non", "Plutôt non", "Plutôt oui", "Oui, tout à fait"] },
   { section: 3, id: 'q11_resolution', type: 'choice', title: "Votre demande a-t-elle été résolue dès votre première visite ?",
     options: ["Oui", "Non, j'ai dû revenir", "Non, elle est toujours en cours"] },
 
-  { section: 4, id: 'q12_delai', type: 'choice', title: "Comment percevez-vous le délai de traitement de vos opérations et demandes ?",
-    options: ["Très rapide", "Rapide", "Long", "Trop long"] },
-  { section: 4, id: 'q13_satisfaction', type: 'choice', title: "Quel est votre niveau de satisfaction concernant votre expérience dans notre agence ?",
-    options: ["Très satisfait(e)", "Satisfait(e)", "Moyennement satisfait(e)", "Insatisfait(e)", "Très insatisfait(e)"] },
+  { section: 4, id: 'q12_delai', type: 'choice', slider: true, title: "Comment percevez-vous le délai de traitement de vos opérations et demandes ?",
+    options: ["Trop long", "Long", "Rapide", "Très rapide"] },
+  { section: 4, id: 'q13_satisfaction', type: 'choice', slider: true, title: "Quel est votre niveau de satisfaction concernant votre expérience dans notre agence ?",
+    options: ["Très insatisfait(e)", "Insatisfait(e)", "Moyennement satisfait(e)", "Satisfait(e)", "Très satisfait(e)"] },
   { section: 4, id: 'q14_comparaison', type: 'choice', title: "Par rapport aux autres agences que vous connaissez, la nôtre vous semble :",
     options: ["Meilleure", "Pareille", "Moins bien", "Je n'en connais pas d'autres"] },
 
@@ -143,14 +165,20 @@ const QUESTIONS = [
 ];
 const NB_SECTIONS = 5;
 
-const state = { agence: null, conseiller: '', reponses: {} };
+const state = { agence: null, conseiller: '', notes: {c1:7,c2:7,c3:7,c4:7,c5:7}, reponses: {} };
 let step = 0, submitting = false;
-const totalSteps = 3 + NB_SECTIONS + 1; // intro, agence, conseiller, 5 sections, thanks
+// 0 intro, 1 agence, 2 conseiller, 3 SectionI, 4 SectionII, 5..9 nouvelles sections, 10 thanks
+const totalSteps = 5 + NB_SECTIONS + 1;
 
 function progressHTML(current){
   let dots = '';
   for(let i=1;i<totalSteps-1;i++){ dots += '<div class="dot ' + (i<=current?'filled':'') + '"></div>'; }
   return '<div class="progress">' + dots + '</div>';
+}
+
+function headerHTML(title){
+  return '<div class="header"><img class="header-logo" src="' + LOGO_SRC + '" alt="CREA INVEST">'
+    + '<div><div class="brand">CREA INVEST · Votre avis</div><div class="title">' + title + '</div></div></div>';
 }
 
 function conseillerOptions(){
@@ -162,7 +190,52 @@ function conseillerOptions(){
   return opts;
 }
 
-function questionBlockHTML(q){
+// ---- Jauge numérique 0-10 (les 5 anciens critères) ----
+function gaugeRowNumeric(crit){
+  const val = state.notes[crit.id];
+  return '<div class="qblock">'
+    + '<div class="crit-top"><span class="qtitle" style="margin-bottom:0">' + crit.name + '</span><span class="crit-value" id="val-' + crit.id + '">' + val + '/10</span></div>'
+    + '<div class="crit-desc">' + crit.desc + '</div>'
+    + '<div class="gauge"><div class="gauge-fill" id="fill-' + crit.id + '" style="width:' + (val*10) + '%"></div>'
+    + '<input type="range" min="0" max="10" step="1" value="' + val + '" oninput="updateCritNumeric(\'' + crit.id + '\', this.value)"></div>'
+    + '<div class="gauge-ends"><span>Très faible</span><span>Excellent</span></div>'
+    + '</div>';
+}
+function updateCritNumeric(id, val){
+  state.notes[id] = Number(val);
+  document.getElementById('val-'+id).textContent = val+'/10';
+  document.getElementById('fill-'+id).style.width = (val*10)+'%';
+}
+
+// ---- Jauge qualitative à curseur (options textuelles, pire -> mieux) ----
+function defaultSliderIndex(n){ return Math.floor(n/2); }
+
+function gaugeRowQualitative(q){
+  if(state.reponses[q.id] === undefined){
+    state.reponses[q.id] = q.options[defaultSliderIndex(q.options.length)];
+  }
+  const idx = q.options.indexOf(state.reponses[q.id]);
+  const max = q.options.length - 1;
+  const pct = max > 0 ? (idx / max) * 100 : 0;
+  return '<div class="qblock">'
+    + '<div class="crit-top"><span class="qtitle" style="margin-bottom:0">' + q.title + '</span><span class="crit-value" id="val-' + q.id + '">' + q.options[idx] + '</span></div>'
+    + '<div class="gauge"><div class="gauge-fill" id="fill-' + q.id + '" style="width:' + pct + '%"></div>'
+    + '<input type="range" min="0" max="' + max + '" step="1" value="' + idx + '" oninput="updateQualitative(\'' + q.id + '\', this.value)"></div>'
+    + '<div class="gauge-ends"><span>' + q.options[0] + '</span><span>' + q.options[max] + '</span></div>'
+    + '</div>';
+}
+function updateQualitative(qid, idxStr){
+  const q = QUESTIONS.find(function(x){ return x.id === qid; });
+  const idx = Number(idxStr);
+  const label = q.options[idx];
+  state.reponses[qid] = label;
+  document.getElementById('val-'+qid).textContent = label;
+  const max = q.options.length - 1;
+  document.getElementById('fill-'+qid).style.width = (max>0 ? (idx/max)*100 : 0) + '%';
+}
+
+// ---- Boutons (questions catégorielles) + texte libre ----
+function questionBlockButtons(q){
   const current = state.reponses[q.id];
   let html = '<div class="qblock" data-qid="' + q.id + '"><div class="qtitle">' + q.title + '</div>';
   if(q.type === 'choice'){
@@ -187,6 +260,11 @@ function questionBlockHTML(q){
   return html;
 }
 
+function questionBlockHTML(q){
+  if(q.type === 'choice' && q.slider){ return gaugeRowQualitative(q); }
+  return questionBlockButtons(q);
+}
+
 function selectOption(qid, value){
   state.reponses[qid] = value;
   render();
@@ -197,7 +275,7 @@ function questionsForSection(n){ return QUESTIONS.filter(function(q){ return q.s
 function validateSection(n){
   const qs = questionsForSection(n);
   for(let i=0;i<qs.length;i++){
-    if(qs[i].type === 'choice' && !state.reponses[qs[i].id]){ return false; }
+    if(qs[i].type === 'choice' && !qs[i].slider && !state.reponses[qs[i].id]){ return false; }
   }
   return true;
 }
@@ -216,10 +294,9 @@ function render(){
       + '<div class="footer"><button class="btn btn-primary" onclick="next()">Commencer</button></div>';
   }
   else if(step === 1){
-    html = '<div class="header"><div class="brand">CREA INVEST · Votre avis</div>'
-      + '<div class="title">Quelle agence avez-vous visitée aujourd\'hui ?</div></div>'
+    html = headerHTML('Quelle agence avez-vous visitée aujourd\'hui ?')
       + progressHTML(1)
-      + '<div class="body"><div class="step-label">Informations générales</div>'
+      + '<div class="body"><div class="step-label">Informations générales · 1 sur 2</div>'
       + '<div class="agence-list">' + AGENCES.map(function(a){
           return '<div class="agence-item ' + (state.agence===a.code?'selected':'') + '" onclick="selectAgence(\'' + a.code + '\')">'
             + '<div class="agence-icon">' + a.code.split('-')[0].slice(0,2) + '</div><div class="agence-name">' + a.nom + '</div></div>';
@@ -229,22 +306,39 @@ function render(){
       + '<button class="btn btn-primary" onclick="validateAgence()">Continuer</button></div>';
   }
   else if(step === 2){
-    html = '<div class="header"><div class="brand">CREA INVEST · Votre avis</div><div class="title">Qui vous a reçu(e) ?</div></div>'
+    html = headerHTML('Qui vous a reçu(e) ?')
       + progressHTML(2)
-      + '<div class="body"><div class="step-label">Informations générales</div>'
+      + '<div class="body"><div class="step-label">Informations générales · 2 sur 2</div>'
       + '<div class="conseiller-label">Sélectionnez le nom de votre interlocuteur si vous le connaissez.</div>'
       + '<select class="field" onchange="state.conseiller=this.value">' + conseillerOptions() + '</select></div>'
       + '<div class="footer"><button class="btn btn-ghost" onclick="prev()">Retour</button>'
       + '<button class="btn btn-primary" onclick="next()">Continuer</button></div>';
   }
-  else if(step >= 3 && step <= 2 + NB_SECTIONS){
-    const sectionNum = step - 2;
+  else if(step === 3){
+    html = headerHTML('Accueil et posture')
+      + progressHTML(3)
+      + '<div class="body"><div class="step-label">Évaluation du service · 1 sur 2</div>'
+      + criteresI.map(gaugeRowNumeric).join('') + '</div>'
+      + '<div class="footer"><button class="btn btn-ghost" onclick="prev()">Retour</button>'
+      + '<button class="btn btn-primary" onclick="next()">Continuer</button></div>';
+  }
+  else if(step === 4){
+    html = headerHTML('Image et cadre')
+      + progressHTML(4)
+      + '<div class="body"><div class="step-label">Évaluation du service · 2 sur 2</div>'
+      + criteresII.map(gaugeRowNumeric).join('') + '</div>'
+      + '<div class="footer"><button class="btn btn-ghost" onclick="prev()">Retour</button>'
+      + '<button class="btn btn-primary" onclick="next()">Continuer</button></div>';
+  }
+  else if(step >= 5 && step <= 4 + NB_SECTIONS){
+    const sectionNum = step - 4;
     const qs = questionsForSection(sectionNum);
     const titles = {1:'Besoins et accueil', 2:'Difficultés rencontrées', 3:'Conseiller et produit', 4:'Délais et satisfaction', 5:'Votre avis'};
     const isLastSection = sectionNum === NB_SECTIONS;
-    html = '<div class="header"><div class="brand">CREA INVEST · Votre avis</div><div class="title">' + titles[sectionNum] + '</div></div>'
+    html = headerHTML(titles[sectionNum])
       + progressHTML(step)
-      + '<div class="body">' + qs.map(questionBlockHTML).join('')
+      + '<div class="body"><div class="step-label">Votre expérience · ' + sectionNum + ' sur ' + NB_SECTIONS + '</div>'
+      + qs.map(questionBlockHTML).join('')
       + '<div class="error-text" id="err-section">Merci de répondre à toutes les questions pour continuer.</div></div>'
       + '<div class="footer"><button class="btn btn-ghost" onclick="prev()">Retour</button>'
       + (isLastSection
@@ -299,6 +393,7 @@ function submitReponse(){
   const payload = {
     agenceCode: state.agence,
     conseiller: state.conseiller,
+    notes: state.notes,
     reponses: state.reponses
   };
 
